@@ -48,6 +48,7 @@ public class ExitAction extends AbstractApplicationAction {
 
     private static final long serialVersionUID = 1L;
     public static final String ID = "application.exit";
+    private static final String LABELS_BUNDLE = "org.jhotdraw.app.Labels";
     private Component oldFocusOwner;
     private View unsavedView;
 
@@ -56,109 +57,168 @@ public class ExitAction extends AbstractApplicationAction {
      */
     public ExitAction(Application app) {
         super(app);
-        ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.app.Labels");
+        ResourceBundleUtil labels = ResourceBundleUtil.getBundle(LABELS_BUNDLE);
         labels.configureAction(this, ID);
     }
 
     @Override
     public void actionPerformed(ActionEvent evt) {
         final Application app = getApplication();
-        if (app.isEnabled()) {
-            app.setEnabled(false);
-            int unsavedViewsCount = 0;
-            View documentToBeReviewed = null;
-            URI unsavedURI = null;
-            for (View p : app.views()) {
-                if (p.hasUnsavedChanges()) {
-                    if (p.isEnabled()) {
-                        documentToBeReviewed = p;
-                    }
-                    unsavedURI = p.getURI();
-                    unsavedViewsCount++;
+        if (!app.isEnabled()) {
+            return;
+        }
+
+        app.setEnabled(false);
+
+        UnsavedState state = findUnsavedState(app);
+
+        if (state.count > 0 && state.reviewableView == null) {
+            app.setEnabled(true);
+            return;
+        }
+
+        switch (state.count) {
+            case 0:
+                handleNoUnsaved();
+                break;
+            case 1:
+                handleSingleUnsaved(app, state.reviewableView, state.lastUri);
+                break;
+            default:
+                handleMultipleUnsaved(app, state.count, state.reviewableView);
+                break;
+        }
+    }
+
+    /* === Extracted helpers === */
+
+    private static class UnsavedState {
+        final int count;
+        final View reviewableView;
+        final URI lastUri;
+
+        UnsavedState(int count, View reviewableView, URI lastUri) {
+            this.count = count;
+            this.reviewableView = reviewableView;
+            this.lastUri = lastUri;
+        }
+    }
+
+    private UnsavedState findUnsavedState(Application app) {
+        int count = 0;
+        View reviewable = null;
+        URI lastUri = null;
+
+        for (View v : app.views()) {
+            if (v.hasUnsavedChanges()) {
+                if (v.isEnabled()) {
+                    reviewable = v;
                 }
-            }
-            if (unsavedViewsCount > 0 && documentToBeReviewed == null) {
-                // Silently abort, if no view can be reviewed.
-                app.setEnabled(true);
-                return;
-            }
-            final ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.app.Labels");
-            switch (unsavedViewsCount) {
-                case 0:
-                    doExit();
-                    break;
-                case 1:
-                    unsavedView = documentToBeReviewed;
-                    oldFocusOwner = SwingUtilities.getWindowAncestor(unsavedView.getComponent()).getFocusOwner();
-                    unsavedView.setEnabled(false);
-                    JOptionPane pane = new JOptionPane(
-                            "<html>" + UIManager.getString("OptionPane.css")
-                            + "<b>" + labels.getFormatted("application.exit.doYouWantToSave.message",
-                                                          (unsavedURI == null) ? labels.getString("unnamedFile") : URIUtil.
-                                                                  getName(unsavedURI)) + "</b><p>"
-                            + labels.getString("application.exit.doYouWantToSave.details"),
-                            JOptionPane.WARNING_MESSAGE);
-                    Object[] options = {
-                        labels.getString("application.exit.saveOption"),
-                        labels.getString("application.exit.cancelOption"),
-                        labels.getString("application.exit.dontSaveOption")
-                    };
-                    pane.setOptions(options);
-                    pane.setInitialValue(options[0]);
-                    pane.putClientProperty("Quaqua.OptionPane.destructiveOption", 2);
-                    JSheet.showSheet(pane, unsavedView.getComponent(), new SheetListener() {
-                                 @Override
-                                 public void optionSelected(SheetEvent evt) {
-                                     Object value = evt.getValue();
-                                     if (value == null || value.
-                                             equals(labels.getString("application.exit.cancelOption"))) {
-                                         unsavedView.setEnabled(true);
-                                         app.setEnabled(true);
-                                     } else if (value.equals(labels.getString("application.exit.dontSaveOption"))) {
-                                         doExit();
-                                         unsavedView.setEnabled(true);
-                                     } else if (value.equals(labels.getString("application.exit.saveOption"))) {
-                                         saveChanges();
-                                     }
-                                 }
-                             });
-                    break;
-                default:
-                    pane = new JOptionPane(
-                            "<html>" + UIManager.get("OptionPane.css")
-                            + "<b>" + labels.getFormatted("application.exit.doYouWantToReview.message",
-                                                          unsavedViewsCount) + "</b><p>"
-                            + labels.getString("application.exit.doYouWantToReview.details"),
-                            JOptionPane.QUESTION_MESSAGE);
-                    Object[] options2 = {
-                        labels.getString("application.exit.reviewChangesOption"),
-                        labels.getString("application.exit.cancelOption"),
-                        labels.getString("application.exit.discardChangesOption")
-                    };
-                    pane.setOptions(options2);
-                    pane.setInitialValue(options2[0]);
-                    pane.putClientProperty(
-                            "Quaqua.OptionPane.destructiveOption", 2);
-                    JDialog dialog = pane.createDialog(app.getComponent(), null);
-                    Rectangle screenBounds = dialog.getGraphicsConfiguration().getBounds();
-                    if (app.getComponent() == null || !screenBounds.contains(app.getComponent().getBounds())) {
-                        // place dialog in center and in upper third of screen
-                        dialog.setLocation((screenBounds.width - dialog.getWidth()) / 2, (screenBounds.height - dialog.
-                                           getHeight()) / 3);
-                    }
-                    dialog.setVisible(true);
-                    Object value = pane.getValue();
-                    if (value == null || value.equals(labels.getString("application.exit.cancelOption"))) {
-                        app.setEnabled(true);
-                    } else if (value.equals(labels.getString("application.exit.discardChangesOption"))) {
-                        doExit();
-                        app.setEnabled(true);
-                    } else if (value.equals(labels.getString("application.exit.reviewChangesOption"))) {
-                        unsavedView = documentToBeReviewed;
-                        reviewChanges();
-                    }
+                lastUri = v.getURI();
+                count++;
             }
         }
+
+        return new UnsavedState(count, reviewable, lastUri);
+    }
+
+    private void handleNoUnsaved() {
+        doExit();
+    }
+
+    private void handleSingleUnsaved(Application app, View view, URI uri) {
+        unsavedView = view;
+
+        oldFocusOwner = SwingUtilities
+                .getWindowAncestor(view.getComponent())
+                .getFocusOwner();
+
+        view.setEnabled(false);
+
+        showSaveDialog(view, uri, (choice) -> {
+            if (choice == UserChoice.CANCEL) {
+                view.setEnabled(true);
+                app.setEnabled(true);
+            } else if (choice == UserChoice.DONT_SAVE) {
+                doExit();
+                view.setEnabled(true);
+            } else if (choice == UserChoice.SAVE) {
+                saveChanges();
+            }
+        });
+    }
+
+    private void handleMultipleUnsaved(Application app, int count, View reviewable) {
+        ResourceBundleUtil labels = ResourceBundleUtil.getBundle(LABELS_BUNDLE);
+
+        JOptionPane pane = new JOptionPane(
+                "<html>" + UIManager.get("OptionPane.css")
+                        + "<b>" + labels.getFormatted("application.exit.doYouWantToReview.message", count) + "</b><p>"
+                        + labels.getString("application.exit.doYouWantToReview.details"),
+                JOptionPane.QUESTION_MESSAGE);
+
+        Object[] options = {
+                labels.getString("application.exit.reviewChangesOption"),
+                labels.getString("application.exit.cancelOption"),
+                labels.getString("application.exit.discardChangesOption")
+        };
+
+        pane.setOptions(options);
+        pane.setInitialValue(options[0]);
+
+        JDialog dialog = pane.createDialog(app.getComponent(), null);
+        dialog.setVisible(true);
+
+        Object value = pane.getValue();
+
+        if (value == null || value.equals(labels.getString("application.exit.cancelOption"))) {
+            app.setEnabled(true);
+
+        } else if (value.equals(labels.getString("application.exit.discardChangesOption"))) {
+            doExit();
+            app.setEnabled(true);
+
+        } else if (value.equals(labels.getString("application.exit.reviewChangesOption"))) {
+            unsavedView = reviewable;
+            reviewChanges();
+        }
+    }
+
+    /* === Small helper abstractions === */
+
+    private enum UserChoice { SAVE, DONT_SAVE, CANCEL }
+
+    private void showSaveDialog(View view, URI uri, java.util.function.Consumer<UserChoice> handler) {
+        ResourceBundleUtil labels = ResourceBundleUtil.getBundle(LABELS_BUNDLE);
+
+        Object[] options = {
+                labels.getString("application.exit.saveOption"),
+                labels.getString("application.exit.cancelOption"),
+                labels.getString("application.exit.dontSaveOption")
+        };
+
+        JOptionPane pane = new JOptionPane(
+                "<html>" + UIManager.getString("OptionPane.css")
+                        + "<b>" + labels.getFormatted(
+                        "application.exit.doYouWantToSave.message",
+                        (uri == null) ? labels.getString("unnamedFile") : URIUtil.getName(uri))
+                        + "</b><p>"
+                        + labels.getString("application.exit.doYouWantToSave.details"),
+                JOptionPane.WARNING_MESSAGE);
+
+        pane.setOptions(options);
+
+        JSheet.showSheet(pane, view.getComponent(), evt -> {
+            Object value = evt.getValue();
+
+            if (value == null || value.equals(options[1])) {
+                handler.accept(UserChoice.CANCEL);
+            } else if (value.equals(options[2])) {
+                handler.accept(UserChoice.DONT_SAVE);
+            } else {
+                handler.accept(UserChoice.SAVE);
+            }
+        });
     }
 
     protected URIChooser getChooser(View view) {
@@ -197,7 +257,7 @@ public class ExitAction extends AbstractApplicationAction {
 
     protected void reviewChanges() {
         if (unsavedView.isEnabled()) {
-            final ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.app.Labels");
+            final ResourceBundleUtil labels = ResourceBundleUtil.getBundle(LABELS_BUNDLE);
             oldFocusOwner = SwingUtilities.getWindowAncestor(unsavedView.getComponent()).getFocusOwner();
             unsavedView.setEnabled(false);
             URI unsavedURI = unsavedView.getURI();
@@ -294,7 +354,7 @@ public class ExitAction extends AbstractApplicationAction {
                     doExit();
                 } catch (InterruptedException | ExecutionException ex) {
                     Logger.getLogger(ExitAction.class.getName()).log(Level.SEVERE, null, ex);
-                    ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.app.Labels");
+                    ResourceBundleUtil labels = ResourceBundleUtil.getBundle(LABELS_BUNDLE);
                     JSheet.showMessageSheet(v.getComponent(),
                                             "<html>" + UIManager.getString("OptionPane.css")
                                             + "<b>" + labels.format("file.save.couldntSave.message", URIUtil.
@@ -329,7 +389,7 @@ public class ExitAction extends AbstractApplicationAction {
                     reviewNext();
                 } catch (InterruptedException | ExecutionException ex) {
                     Logger.getLogger(ExitAction.class.getName()).log(Level.SEVERE, null, ex);
-                    ResourceBundleUtil labels = ResourceBundleUtil.getBundle("org.jhotdraw.app.Labels");
+                    ResourceBundleUtil labels = ResourceBundleUtil.getBundle(LABELS_BUNDLE);
                     JSheet.showMessageSheet(v.getComponent(),
                                             "<html>" + UIManager.getString("OptionPane.css")
                                             + "<b>" + labels.format("file.save.couldntSave.message", uri) + "</b><p>"
