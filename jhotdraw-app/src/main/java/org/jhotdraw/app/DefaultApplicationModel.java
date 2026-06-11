@@ -26,6 +26,7 @@ import org.jhotdraw.app.action.file.NewFileAction;
 import org.jhotdraw.app.action.file.OpenFileAction;
 import org.jhotdraw.app.action.file.SaveFileAction;
 import org.jhotdraw.app.action.file.SaveFileAsAction;
+import org.jhotdraw.app.action.file.OpenContainingFolderAction;
 
 /**
  * An {@link ApplicationModel} which creates a default set of {@code Action}s
@@ -83,6 +84,8 @@ public class DefaultApplicationModel
         m.put(OpenFileAction.ID, new OpenFileAction(a));
         m.put(SaveFileAction.ID, new SaveFileAction(a, v));
         m.put(SaveFileAsAction.ID, new SaveFileAsAction(a, v));
+        m.put(OpenContainingFolderAction.ID,
+        new OpenContainingFolderAction(a, v));
         m.put(CloseFileAction.ID, new CloseFileAction(a, v));
         m.put(UndoAction.ID, new UndoAction(a, v));
         m.put(RedoAction.ID, new RedoAction(a, v));
