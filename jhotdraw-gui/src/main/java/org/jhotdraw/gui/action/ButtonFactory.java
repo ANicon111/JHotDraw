@@ -71,6 +71,7 @@ import org.jhotdraw.draw.action.AlignAction;
 import org.jhotdraw.draw.action.ApplyAttributesAction;
 import org.jhotdraw.draw.action.AttributeAction;
 import org.jhotdraw.draw.action.AttributeToggler;
+import org.jhotdraw.draw.action.BringForwardAction;
 import org.jhotdraw.draw.action.BringToFrontAction;
 import org.jhotdraw.draw.action.ColorIcon;
 import org.jhotdraw.draw.action.DefaultAttributeAction;
@@ -88,6 +89,7 @@ import org.jhotdraw.draw.action.SelectSameAction;
 import org.jhotdraw.draw.action.SelectionColorChooserAction;
 import org.jhotdraw.draw.action.SelectionColorChooserHandler;
 import org.jhotdraw.draw.action.SelectionColorIcon;
+import org.jhotdraw.draw.action.SendBackwardAction;
 import org.jhotdraw.draw.action.SendToBackAction;
 import org.jhotdraw.draw.action.StrokeIcon;
 import org.jhotdraw.draw.action.UngroupAction;
@@ -353,6 +355,8 @@ public class ButtonFactory {
         a.add(null); // separator
         a.add(new BringToFrontAction(editor));
         a.add(new SendToBackAction(editor));
+        a.add(new BringForwardAction(editor));
+        a.add(new SendBackwardAction(editor));
         return a;
     }
 
@@ -1680,6 +1684,10 @@ public class ButtonFactory {
         bar.add(new BringToFrontAction(editor)).setFocusable(false);
         dsp.add(d);
         bar.add(new SendToBackAction(editor)).setFocusable(false);
+        dsp.add(d);
+        bar.add(new BringForwardAction(editor)).setFocusable(false);
+        dsp.add(d);
+        bar.add(new SendBackwardAction(editor)).setFocusable(false);
         dsp.add(d);
     }
 

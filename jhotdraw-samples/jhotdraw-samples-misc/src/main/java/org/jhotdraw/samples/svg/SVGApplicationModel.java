@@ -94,6 +94,8 @@ public class SVGApplicationModel extends DefaultApplicationModel {
         m.put(SplitAction.ID, new SplitAction(editor));
         m.put(BringToFrontAction.ID, new BringToFrontAction(editor));
         m.put(SendToBackAction.ID, new SendToBackAction(editor));
+        m.put(BringForwardAction.ID, new BringForwardAction(editor));
+        m.put(SendBackwardAction.ID, new SendBackwardAction(editor));
         //view.addDisposable(action);
     }
 
@@ -123,6 +125,8 @@ public class SVGApplicationModel extends DefaultApplicationModel {
         m.put(SplitAction.ID, new SplitAction(editor));
         m.put(BringToFrontAction.ID, new BringToFrontAction(editor));
         m.put(SendToBackAction.ID, new SendToBackAction(editor));
+        m.put(BringForwardAction.ID, new BringForwardAction(editor));
+        m.put(SendBackwardAction.ID, new SendBackwardAction(editor));
         return m;
     }
 
@@ -149,6 +153,8 @@ public class SVGApplicationModel extends DefaultApplicationModel {
                 m.addSeparator();
                 m.add(am.get(BringToFrontAction.ID));
                 m.add(am.get(SendToBackAction.ID));
+                m.add(am.get(BringForwardAction.ID));
+                m.add(am.get(SendBackwardAction.ID));
             }
 
             @Override

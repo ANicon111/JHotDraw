@@ -66,6 +66,8 @@ public class NetPanel extends JPanel {
         pb.addSeparator();
         pb.add(new BringToFrontAction(editor));
         pb.add(new SendToBackAction(editor));
+        pb.add(new BringForwardAction(editor));
+        pb.add(new SendBackwardAction(editor));
         pb.addSeparator();
         pb.add(new CutAction());
         pb.add(new CopyAction());
