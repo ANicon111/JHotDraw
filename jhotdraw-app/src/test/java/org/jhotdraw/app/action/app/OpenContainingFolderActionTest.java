@@ -3,7 +3,7 @@ package org.jhotdraw.app.action.file;
 import java.awt.event.ActionEvent;
 import java.net.URI;
 
-import org.jhotdraw.api.app.Applicatiocdn;
+import org.jhotdraw.api.app.Application;
 import org.jhotdraw.api.app.View;
 import org.junit.Before;
 import org.junit.Test;
