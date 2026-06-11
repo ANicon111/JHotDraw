@@ -35,6 +35,9 @@ import org.jhotdraw.draw.io.OutputFormat;
 import org.jhotdraw.draw.tool.CreationTool;
 import org.jhotdraw.gui.JFileURIChooser;
 import org.jhotdraw.gui.action.ButtonFactory;
+
+import static org.jhotdraw.draw.AttributeKeys.FILL_COLOR;
+import static org.jhotdraw.draw.AttributeKeys.STROKE_COLOR;
 import static org.jhotdraw.samples.odg.ODGAttributeKeys.*;
 import org.jhotdraw.samples.odg.figures.ODGGroupFigure;
 import org.jhotdraw.samples.odg.figures.ODGPathFigure;
@@ -95,6 +98,8 @@ public class ODGApplicationModel extends DefaultApplicationModel {
         a.add(null); // separator
         a.add(new BringToFrontAction(editor));
         a.add(new SendToBackAction(editor));
+        a.add(new BringForwardAction(editor));
+        a.add(new SendBackwardAction(editor));
         return a;
     }
 
