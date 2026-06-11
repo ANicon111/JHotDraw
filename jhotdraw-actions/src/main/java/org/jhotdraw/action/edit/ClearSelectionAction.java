@@ -7,6 +7,7 @@
  */
 package org.jhotdraw.action.edit;
 
+import org.jhotdraw.draw.DefaultDrawingView;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -70,6 +71,8 @@ public class ClearSelectionAction extends AbstractSelectionAction {
         labels.configureAction(this, ID);
     }
 
+
+    
     @Override
     public void actionPerformed(ActionEvent evt) {
         JComponent c = target;
@@ -79,14 +82,28 @@ public class ClearSelectionAction extends AbstractSelectionAction {
                     getPermanentFocusOwner();
         }
         if (c != null && c.isEnabled()) {
-            if (c instanceof EditableComponent) {
-                ((EditableComponent) c).clearSelection();
-            } else if (c instanceof JTextComponent) {
-                JTextComponent tc = ((JTextComponent) c);
-                tc.select(tc.getSelectionStart(), tc.getSelectionStart());
-            } else {
-                c.getToolkit().beep();
-            }
+            // Extracted logic delegated to a component handler function
+            executeSelectionClear(c);
+        }
+        
+    }
+
+    /**
+     * Extracted helper method that eliminates Feature Envy by routing the clear
+     * request based on clean component abstraction boundaries.
+     */
+    private void executeSelectionClear(JComponent c) {
+        // Fix: Properly check against the concrete class type instead of package path
+        if (c instanceof DefaultDrawingView) {
+            // Behavioral Delegation: Cast to DefaultDrawingView to invoke your domain method
+            ((DefaultDrawingView) c).clearSelectedFigures();
+        } else if (c instanceof EditableComponent) {
+            ((EditableComponent) c).clearSelection();
+        } else if (c instanceof JTextComponent) {
+            JTextComponent tc = (JTextComponent) c;
+            tc.select(tc.getSelectionStart(), tc.getSelectionStart());
+        } else {
+            c.getToolkit().beep();
         }
     }
 

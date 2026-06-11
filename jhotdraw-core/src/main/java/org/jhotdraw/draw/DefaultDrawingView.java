@@ -1508,4 +1508,18 @@ public class DefaultDrawingView
     public Handle getActiveHandle() {
         return activeHandle;
     }
+
+    /**
+     * Safely clears the current drawing canvas by encapsulating the removal logic
+     * within the domain view component where the data structure resides.
+     */
+    public void clearCanvas() {
+        Drawing currentDrawing = getDrawing();
+        if (currentDrawing != null) {
+            // Create a safe shallow copy of the figures to avoid concurrent modification errors
+            for (Figure figure : new java.util.ArrayList<>(currentDrawing.getFigures())) {
+                currentDrawing.remove(figure);
+            }
+        }
+    }
 }
