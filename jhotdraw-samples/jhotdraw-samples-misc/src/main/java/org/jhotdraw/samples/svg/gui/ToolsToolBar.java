@@ -190,6 +190,10 @@ public class ToolsToolBar extends AbstractToolBar {
         disposables.add(a);
         list.add(a = new SendToBackAction(editor));
         disposables.add(a);
+        list.add(a = new BringForwardAction(editor));
+        disposables.add(a);
+        list.add(a = new SendBackwardAction(editor));
+        disposables.add(a);
         return list;
     }
 
