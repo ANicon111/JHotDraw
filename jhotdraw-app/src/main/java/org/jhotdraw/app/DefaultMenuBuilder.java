@@ -41,6 +41,7 @@ import org.jhotdraw.app.action.file.OpenFileAction;
 import org.jhotdraw.app.action.file.PrintFileAction;
 import org.jhotdraw.app.action.file.SaveFileAction;
 import org.jhotdraw.app.action.file.SaveFileAsAction;
+import org.jhotdraw.app.action.file.OpenContainingFolderAction;
 
 /**
  * {@code DefaultMenuBuilder}.
@@ -237,6 +238,12 @@ public class DefaultMenuBuilder implements MenuBuilder {
      */
     @Override
     public void addOtherFileItems(JMenu m, Application app, View v) {
+        ActionMap am = app.getActionMap(v);
+        Action a;
+
+        if ((a = am.get(OpenContainingFolderAction.ID)) != null) {
+            add(m, a);
+        }
     }
 
     /**
